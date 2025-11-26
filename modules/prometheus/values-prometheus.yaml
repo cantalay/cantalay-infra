@@ -1,0 +1,46 @@
+grafana:
+  enabled: true
+  adminPassword: "prom-operator"
+  service:
+    type: NodePort
+    nodePort: 32000
+  ingress:
+    enabled: false
+
+alertmanager:
+  enabled: true
+  alertmanagerSpec:
+    replicas: 1
+
+prometheus:
+  enabled: true
+  prometheusSpec:
+    replicas: 1
+    retention: 10d
+    enableAdminAPI: true
+    serviceMonitorSelectorNilUsesHelmValues: false
+    podMonitorSelectorNilUsesHelmValues: false
+
+# Exporter ve metrics bileşenleri
+nodeExporter:
+  enabled: true
+
+kubeStateMetrics:
+  enabled: true
+
+# K3s olmayan bileşenler
+kubeEtcd:
+  enabled: false
+
+kubeScheduler:
+  enabled: false
+
+kubeProxy:
+  enabled: false
+
+coreDns:
+  enabled: true
+
+# ServiceMonitor'ları scrape etsin
+serviceMonitor:
+  enabled: true

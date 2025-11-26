@@ -75,4 +75,40 @@ module "cert_manager" {
   depends_on = [module.traefik]
 }
 
+module "loki" {
+  source = "./modules/loki"
 
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [module.traefik]
+}
+
+module "promtail" {
+  source = "./modules/promtail"
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    module.loki
+  ]
+}
+
+module "prometheus" {
+  source = "./modules/prometheus"
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    null_resource.get_kubeconfig,  # cluster hazır olsun
+    module.traefik                 # ingress var
+  ]
+}

@@ -1,0 +1,131 @@
+# Loki deployment mode
+deploymentMode: SingleBinary
+
+loki:
+  auth_enabled: false
+
+  commonConfig:
+    replication_factor: 1
+    path_prefix: /var/loki  # Bu önemli
+
+  storage:
+    type: 'filesystem'
+    filesystem:
+      chunks_directory: /var/loki/chunks
+      rules_directory: /var/loki/rules
+
+  schemaConfig:
+    configs:
+      - from: "2024-01-01"
+        store: tsdb
+        object_store: filesystem
+        schema: v13
+        index:
+          prefix: index_
+          period: 24h
+
+  rulerConfig:
+    storage:
+      type: local
+      local:
+        directory: /var/loki/rules
+
+# Single binary yapılandırması
+singleBinary:
+  replicas: 1
+
+  # Persistence kapalı ama emptyDir kullan
+  persistence:
+    enabled: false
+
+  # EmptyDir volume ekle (pod yeniden başlatılınca silinir ama çalışır)
+  extraVolumes:
+    - name: storage
+      emptyDir: {}
+
+  extraVolumeMounts:
+    - name: storage
+      mountPath: /var/loki
+
+  resources:
+    limits:
+      cpu: 1000m
+      memory: 1Gi
+    requests:
+      cpu: 100m
+      memory: 128Mi
+
+# Diğer component'leri devre dışı bırak
+backend:
+  replicas: 0
+
+read:
+  replicas: 0
+
+write:
+  replicas: 0
+
+ingester:
+  replicas: 0
+
+querier:
+  replicas: 0
+
+queryFrontend:
+  replicas: 0
+
+queryScheduler:
+  replicas: 0
+
+distributor:
+  replicas: 0
+
+compactor:
+  replicas: 0
+
+indexGateway:
+  replicas: 0
+
+bloomCompactor:
+  replicas: 0
+
+bloomGateway:
+  replicas: 0
+
+# Cache'leri devre dışı bırak
+chunksCache:
+  enabled: false
+
+resultsCache:
+  enabled: false
+
+# Gateway ayarları
+gateway:
+  enabled: true
+  replicas: 1
+  affinity: {}  # Anti-affinity'yi kapat (tek node için)
+  service:
+    type: NodePort
+    port: 80
+    nodePort: 30339
+
+# Promtail'i devre dışı bırak (ayrı kurulu)
+promtail:
+  enabled: false
+
+# Monitoring
+monitoring:
+  dashboards:
+    enabled: false
+  rules:
+    enabled: false
+  serviceMonitor:
+    enabled: false
+  selfMonitoring:
+    enabled: false
+    grafanaAgent:
+      installOperator: false
+
+# Test suite'i devre dışı bırak
+test:
+  enabled: false

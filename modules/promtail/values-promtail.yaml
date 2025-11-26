@@ -1,0 +1,29 @@
+config:
+  serverPort: 3101
+
+  clients:
+    - url: http://loki-gateway.loki.svc.cluster.local/loki/api/v1/push
+
+  positions:
+    filename: /run/promtail/positions.yaml
+
+  snippets:
+    pipelineStages:
+      - cri: {}
+      - docker: {}
+      - static_labels:
+          cluster: "k3s"
+
+daemonset:
+  enabled: true
+
+serviceMonitor:
+  enabled: false
+
+ports:
+  - name: http-metrics
+    containerPort: 9080
+    protocol: TCP
+
+extraArgs:
+  - -config.expand-env=true
