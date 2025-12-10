@@ -1,0 +1,94 @@
+global:
+  enabled: true
+  tlsDisable: true   # TLS Traefik terminates
+
+server:
+  image:
+    repository: hashicorp/vault
+    tag: "1.20.4"       # 2025 Kasım en güncel Vault OSS
+    pullPolicy: IfNotPresent
+
+  logLevel: "info"
+
+  # ================================
+  # STORAGE: Integrated Storage (RAFT) - Recommended for Production
+  # ================================
+  ha:
+    enabled: true
+    replicas: 1      # Tek node K3s için 1 yapabilirsin; prod için 3 önerilir.
+
+    raft:
+      enabled: true
+      config: |
+        ui = true
+
+        listener "tcp" {
+          address = "0.0.0.0:8200"
+          tls_disable = true
+        }
+
+        storage "raft" {
+          path = "/vault/data"
+        }
+
+        service_registration "kubernetes" {}
+
+        disable_mlock = true
+
+  standalone:
+    enabled: false
+
+  # ================================
+  # HEALTH CHECKS
+  # ================================
+  readinessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true&sealedcode=204"
+
+  livenessProbe:
+    enabled: true
+    path: "/v1/sys/health?standbyok=true&sealedcode=204"
+
+  # ================================
+  # RESOURCES
+  # ================================
+  resources:
+    requests:
+      cpu: "250m"
+      memory: "512Mi"
+    limits:
+      cpu: "1"
+      memory: "1Gi"
+
+  # ================================
+  # PERSISTENCE
+  # ================================
+  dataStorage:
+    enabled: true
+    size: 10Gi
+    storageClass: "local-path"
+
+  auditStorage:
+    enabled: true
+    size: 5Gi
+    storageClass: "local-path"
+
+  # ================================
+  # SERVICE
+  # ================================
+  service:
+    enabled: true
+    type: ClusterIP
+    port: 8200
+
+  # ================================
+  # UI
+  # ================================
+  ui:
+    enabled: true
+
+injector:
+  enabled: false
+
+csi:
+  enabled: false
