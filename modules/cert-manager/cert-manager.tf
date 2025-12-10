@@ -34,7 +34,3 @@ resource "helm_release" "cert_manager" {
     kubernetes_namespace.cert_manager
   ]
 }
-
-resource "kubectl_manifest" "clusterissuer_prod" {
-  yaml_body = file("${path.module}/cluster-issuer-production.yaml")
-}

@@ -10,11 +10,6 @@ terraform {
       version = ">= 2.13.0"
     }
 
-    kubectl = {
-      source  = "alekc/kubectl"
-      version = ">= 2.0.0"
-    }
-
     null = {
       source  = "hashicorp/null"
       version = ">= 3.2.1"
@@ -35,8 +30,4 @@ provider "helm" {
   kubernetes = {
     config_path = "${path.module}/kubeconfig.yaml"
   }
-}
-
-provider "kubectl" {
-  config_path = "${path.module}/kubeconfig.yaml"
 }

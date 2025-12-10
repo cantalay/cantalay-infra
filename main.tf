@@ -67,7 +67,6 @@ module "cert_manager" {
   source = "./modules/cert-manager"
 
   providers = {
-    kubectl    = kubectl
     kubernetes = kubernetes
     helm       = helm
   }
@@ -112,3 +111,34 @@ module "prometheus" {
     module.traefik                 # ingress var
   ]
 }
+
+module "tempo" {
+  source = "./modules/tempo"
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    null_resource.get_kubeconfig,
+    module.prometheus,  # Grafana hazır olsun
+    module.traefik,      # ingress class hazır olsun
+    module.cert_manager  # ileride TLS istersen hazır bulunsun
+  ]
+}
+
+module "otel_collector" {
+  source = "./modules/otel-collector"
+
+  providers = {
+    //kubectl    = kubectl
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    module.tempo   # Collector Tempo’ya gönderecek
+  ]
+}
+
+

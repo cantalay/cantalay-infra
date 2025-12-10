@@ -1,3 +1,15 @@
+terraform {
+  required_providers {
+    helm = {
+      source  = "hashicorp/helm"
+      version = ">= 2.12.1"
+    }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = ">= 2.22.0"
+    }
+  }
+}
 resource "helm_release" "kube_prometheus_stack" {
   name       = "kube-prometheus-stack"
   namespace  = "monitoring"
