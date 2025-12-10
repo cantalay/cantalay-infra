@@ -141,4 +141,19 @@ module "otel_collector" {
   ]
 }
 
+module "vault" {
+  source = "./modules/vault"
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    null_resource.get_kubeconfig,
+    module.traefik,
+    module.cert_manager
+  ]
+}
+
 
