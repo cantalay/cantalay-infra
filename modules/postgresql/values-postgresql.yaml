@@ -1,0 +1,30 @@
+image:
+  registry: docker.io
+  repository: bitnami/postgresql
+  tag: latest   # Chart 18.1.13 için stable image
+  pullPolicy: IfNotPresent
+
+auth:
+  username: keycloak
+  password: ""              # Vault → Terraform → inject
+  database: keycloak
+  enablePostgresUser: true
+
+primary:
+  persistence:
+    enabled: true
+    storageClass: "local-path"
+    size: 10Gi
+
+  resources:
+    requests:
+      cpu: 250m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+volumePermissions:
+  enabled: true
+
+initdbScripts: {}
