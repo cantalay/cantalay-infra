@@ -1,66 +1,159 @@
+# ============================================================
+# Tempo Single Binary — Production Ready (K3s / VPS)
+# ============================================================
+
+replicas: 1
+
 tempo:
-  mode: "single-binary"
+  registry: docker.io
+  repository: grafana/tempo
+  tag: "2.9.0"
+  pullPolicy: IfNotPresent
 
+  # ------------------------------------------------------------
+  # Runtime & Stability
+  # ------------------------------------------------------------
+  memBallastSizeMbs: 512
+  multitenancyEnabled: false
+  reportingEnabled: false
+
+  # ------------------------------------------------------------
+  # Metrics Generator (DISABLED — critical)
+  # ------------------------------------------------------------
+  metricsGenerator:
+    enabled: false
+
+  # ------------------------------------------------------------
+  # Retention
+  # ------------------------------------------------------------
+  retention: 168h # 7 days
+
+  # ------------------------------------------------------------
+  # Server
+  # ------------------------------------------------------------
+  server:
+    http_listen_port: 3200
+
+  # ------------------------------------------------------------
+  # Receivers (OTLP only — modern & clean)
+  # ------------------------------------------------------------
+  receivers:
+    otlp:
+      protocols:
+        grpc:
+          endpoint: "0.0.0.0:4317"
+        http:
+          endpoint: "0.0.0.0:4318"
+
+  # ------------------------------------------------------------
+  # Storage (Persistent — production safe)
+  # ------------------------------------------------------------
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+  # ------------------------------------------------------------
+  # Resource limits (safe for VPS)
+  # ------------------------------------------------------------
+  resources:
+    requests:
+      cpu: 100m
+      memory: 512Mi
+    limits:
+      cpu: 1
+      memory: 1Gi
+
+  # ------------------------------------------------------------
+  # Probes
+  # ------------------------------------------------------------
+  livenessProbe:
+    httpGet:
+      path: /ready
+      port: 3200
+    initialDelaySeconds: 30
+    periodSeconds: 10
+
+  readinessProbe:
+    httpGet:
+      path: /ready
+      port: 3200
+    initialDelaySeconds: 20
+    periodSeconds: 10
+
+# ============================================================
+# Generated Tempo Config (DO NOT override manually)
+# ============================================================
+
+config: |
   memberlist:
-    abort_if_cluster_join_fails: false
-    join_members:
-      - tempo.tempo.svc.cluster.local
-  config:
+    cluster_label: "{{ .Release.Name }}.{{ .Release.Namespace }}"
 
+  multitenancy_enabled: false
+
+  server:
+    http_listen_port: 3200
+
+  distributor:
     receivers:
       otlp:
         protocols:
           grpc:
-            endpoint: "0.0.0.0:4317"
           http:
-            endpoint: "0.0.0.0:4318"
 
-    storage:
-      trace:
-        backend: local
-        wal:
-          path: /var/tempo/wal
-        local:
-          path: /var/tempo/blocks
+  ingester: {}
 
-    metrics_generator:
-      processors:
-        - service-graphs
-        - span-metrics
-      registry:
-        external_labels: {}
-      storage:
-        path: /var/tempo/generator/wal
-      remote_write:
-        - url: "http://prometheus-server.prometheus.svc.cluster.local:9090/api/v1/write"
-      service_graphs:
-        dimensions:
-          - http.method
-          - http.status_code
-      span_metrics:
-        dimensions:
-          - http.method
-          - http.status_code
-          - http.target
-    memberlist:
-      join_members:
-        - tempo.tempo.svc.cluster.local
-      abort_if_cluster_join_fails: false
-    server:
-      http_listen_port: 3200
+  querier: {}
 
+  query_frontend: {}
 
-  resources:
-    limits:
-      memory: 1Gi
-    requests:
-      cpu: 100m
-      memory: 256Mi
+  compactor:
+    compaction:
+      block_retention: 168h
 
-  persistence:
-    enabled: true
-    size: 10Gi
+  storage:
+    trace:
+      backend: local
+      local:
+        path: /var/tempo/traces
+      wal:
+        path: /var/tempo/wal
+
+# ============================================================
+# Persistence
+# ============================================================
+
+persistence:
+  enabled: false
+#  storageClassName: local-path
+#  accessModes:
+#    - ReadWriteOnce
+#  size: 10Gi
+
+# ============================================================
+# Service
+# ============================================================
 
 service:
   type: ClusterIP
   port: 3200
+
+# ============================================================
+# Security Context
+# ============================================================
+
+securityContext:
+  runAsUser: 10001
+  runAsGroup: 10001
+  fsGroup: 10001
+  runAsNonRoot: true
+
+# ============================================================
+# ServiceMonitor (optional — enable later)
+# ============================================================
+
+serviceMonitor:
+  enabled: false

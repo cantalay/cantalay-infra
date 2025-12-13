@@ -155,5 +155,39 @@ module "vault" {
     module.cert_manager
   ]
 }
+provider "vault" {
+  address = "https://vault.cantalay.com"
+  token   = ""
+}
+module "postgresql" {
+  source = "./modules/postgresql"
 
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    null_resource.get_kubeconfig,
+    module.traefik,
+    module.cert_manager,
+    module.vault
+  ]
+}
+module "keycloak" {
+  source = "./modules/keycloak"
+
+  providers = {
+    helm       = helm
+    kubernetes = kubernetes
+  }
+
+  depends_on = [
+    null_resource.get_kubeconfig,
+    module.traefik,
+    module.cert_manager,
+    module.postgresql,
+    module.vault
+  ]
+}
 

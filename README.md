@@ -17,8 +17,11 @@ Bu fazda yalnızca:
 
 gerçekleşir.
 
----
+#DB yönlendirmesi için terminal kodu 
+```bash
+kubectl port-forward -n database statefulset/postgresql 5432:5432
 
+```
 # Ön Koşullar
 - ssh-keygen ile oluşturulmuş SSH anahtar çiftinizin olması gerekiyor.
 - bu anahtarı sunucuya kopyalayabilmeniz gerekiyor.
@@ -109,10 +112,42 @@ kubectl delete ns monitoring --force --grace-period=0 || true
 kubectl delete ns tempo --force --grace-period=0 || true
 kubectl delete ns otel-collector --force --grace-period=0 || true
 
+
+kubectl delete pvc traefik --force --grace-period=0 || true
+kubectl delete pvc cert-manager --force --grace-period=0 || true
+kubectl delete pvc loki --force --grace-period=0 || true
+kubectl delete pvc promtail --force --grace-period=0 || true
+kubectl delete pvc monitoring --force --grace-period=0 || true
+kubectl delete pvc tempo --force --grace-period=0 || true
+kubectl delete pvc otel-collector --force --grace-period=0 || true
+
 kubectl delete crds --all
 
 rm -f terraform.tfstate* .terraform.lock.hcl
 rm -rf .terraform
+
+terraform import module.cert_manager.kubernetes_namespace.cert_manager cert-manager      
+terraform import module.loki.kubernetes_namespace.loki loki
+terraform import module.promtail.kubernetes_namespace.promtail promtail 
+terraform import module.tempo.kubernetes_namespace.tempo tempo
+terraform import module.otel_collector.kubernetes_namespace.otel_collector otel-collector       
+terraform import module.postgresql.kubernetes_namespace.postgresql database   
+terraform import module.prometheus.kubernetes_namespace.monitoring monitoring                         
+terraform import module.traefik.kubernetes_namespace.traefik traefik
+terraform import module.vault.kubernetes_namespace.vault vault
+terraform import module.keycloak.kubernetes_namespace.keycloak keycloak
+terraform import module.keycloak.kubernetes_secret.keycloak_secrets keycloak/keycloak-secrets
+
+terraform import module.cert_manager.helm_release.cert_manager cert-manager/cert-manager
+terraform import module.loki.helm_release.loki loki/loki
+terraform import module.promtail.helm_release.promtail promtail/promtail
+terraform import module.tempo.helm_release.tempo tempo/tempo
+terraform import module.otel_collector.helm_release.otel_collector otel-collector/otel-collector
+terraform import module.postgresql.helm_release.postgresql database/postgresql
+terraform import module.prometheus.helm_release.kube_prometheus_stack monitoring/kube-prometheus-stack
+terraform import module.traefik.helm_release.traefik traefik/traefik
+terraform import module.vault.helm_release.vault vault/vault
+terraform import module.keycloak.helm_release.keycloak keycloak/keycloak
 
 terraform init
 terraform apply -auto-approve
