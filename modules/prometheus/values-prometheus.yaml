@@ -1,11 +1,50 @@
 grafana:
   enabled: true
+  envFromSecret: grafana-keycloak-secret
   adminPassword: "prom-operator"
   service:
     type: NodePort
     nodePort: 32000
   ingress:
     enabled: false
+  # ==========================
+  # AUTH — KEYCLOAK (OIDC)
+  # ==========================
+  grafana.ini:
+    server:
+      # INTERNAL traffic (inside the pod) must be http
+      protocol: http
+      http_port: 3000
+
+      # EXTERNAL URL (what the browser sees)
+      root_url: https://grafana.cantalay.com
+      domain: grafana.cantalay.com
+      serve_from_sub_path: false
+
+    auth:
+      disable_login_form: true
+
+    auth.generic_oauth:
+      enabled: true
+      name: Keycloak
+      allow_sign_up: true
+      auto_login: false # Suggest keeping false initially to debug if login fails
+
+      client_id: grafana
+      # Ensure this variable matches the key in your kubernetes_secret
+      client_secret: $__env{GRAFANA_CLIENT_SECRET}
+
+      scopes: openid profile email roles
+
+      auth_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/auth
+      token_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/token
+      api_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/userinfo
+
+      # Role mapping
+      role_attribute_path: >
+        contains(resource_access.grafana.roles[*], 'admin') && 'Admin' ||
+        contains(resource_access.grafana.roles[*], 'ops') && 'Editor' ||
+        'Viewer'
 
 alertmanager:
   enabled: true

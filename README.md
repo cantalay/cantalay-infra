@@ -154,6 +154,65 @@ terraform apply -auto-approve
 ```
 
 
+# Sonraki Adımlar
+# 6) VAULT & KEYCLOAK Kurulumu (Phase 2 – Upcoming)
+Bu fazda Terraform ile Vault & Keycloak kurulumu gerçekleştirilecektir.
+
+```bash
+kubectl exec -it vault-0 -n vault -- sh
+vault login
+vault auth enable oidc
+vault auth list
+```
+oidc/ görmelisin.
+```bash
+vault write auth/oidc/config \
+  oidc_discovery_url="https://keycloak.cantalay.com/auth/realms/cantalay-infra" \
+  oidc_client_id="grafana" \
+  oidc_client_secret="***************secret*****************" \
+  default_role="ops"
+```
+Success! Data written to: auth/oidc/config
+```bash
+vault policy write vault-admin - <<EOF
+path "*" {
+  capabilities = ["create", "read", "update", "delete", "list", "sudo"]
+}
+EOF
+```
+Success! Uploaded policy: vault-admin
+```bash
+vault policy write vault-ops - <<EOF
+path "*" {
+  capabilities = ["read", "list"]
+}
+EOF
+```
+Success! Uploaded policy: vault-ops
+kontrol için: 
+```bash
+vault policy list
+```
+burası önemli. rolü nereden alacağını belirliyoruz: 
+```bash
+vault write auth/oidc/role/ops \
+  user_claim="preferred_username" \
+  groups_claim="resource_access.grafana.roles" \
+  allowed_redirect_uris="https://vault.cantalay.com/ui/vault/auth/oidc/oidc/callback" \
+  policies="vault-ops"
+```
+Success! Data written to: auth/oidc/role/ops
+
+```bash 
+vault write auth/oidc/role/admin \
+  user_claim="preferred_username" \
+  groups_claim="resource_access.grafana.roles" \
+  allowed_redirect_uris="https://vault.cantalay.com/ui/vault/auth/oidc/oidc/callback" \
+  policies="vault-admin"
+```
+Success! Data written to: auth/oidc/role/admin
+
+
 
 
 
