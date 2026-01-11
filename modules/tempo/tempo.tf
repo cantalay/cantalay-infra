@@ -1,4 +1,15 @@
-resource "kubernetes_namespace" "tempo" {
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+    }
+  }
+}
+
+resource "kubernetes_namespace_v1" "tempo" {
   metadata {
     name = "tempo"
   }
@@ -6,7 +17,7 @@ resource "kubernetes_namespace" "tempo" {
 
 resource "helm_release" "tempo" {
   name       = "tempo"
-  namespace  = kubernetes_namespace.tempo.metadata[0].name
+  namespace  = kubernetes_namespace_v1.tempo.metadata[0].name
 
   repository = "https://grafana.github.io/helm-charts"
   chart      = "tempo"
@@ -17,6 +28,6 @@ resource "helm_release" "tempo" {
   ]
 
   depends_on = [
-    kubernetes_namespace.tempo
+    kubernetes_namespace_v1.tempo
   ]
 }

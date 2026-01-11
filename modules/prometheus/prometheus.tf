@@ -1,23 +1,29 @@
 terraform {
   required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = ">= 2.12.1"
-    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.22.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
     }
   }
 }
+
+resource "kubernetes_namespace" "monitoring" {
+  metadata {
+    name = "monitoring"
+  }
+}
+
 # Vault → DB Password
 data "vault_kv_secret_v2" "grafana_initial" {
   mount = "kv"
-  name  = "grafana_initial"
+  name  = "monitoring/grafana"
 }
+
 resource "helm_release" "kube_prometheus_stack" {
   name       = "kube-prometheus-stack"
-  namespace  = "monitoring"
+  namespace  = kubernetes_namespace.monitoring.metadata[0].name
   create_namespace = true
 
   repository = "https://prometheus-community.github.io/helm-charts"
@@ -30,7 +36,7 @@ resource "helm_release" "kube_prometheus_stack" {
     set = [
         {
         name  = "grafana.adminPassword"
-        value = data.vault_kv_secret_v2.grafana_initial.data["password"]
+        value = data.vault_kv_secret_v2.grafana_initial.data["initial_password"]
         }
     ]
   depends_on = [
@@ -41,7 +47,7 @@ resource "helm_release" "kube_prometheus_stack" {
 resource "kubernetes_secret" "grafana_keycloak" {
   metadata {
     name      = "grafana-keycloak-secret"
-    namespace = "monitoring"
+    namespace = kubernetes_namespace.monitoring.metadata[0].name
   }
 
   data = {

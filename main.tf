@@ -58,22 +58,6 @@ output "kubeconfig_file" {
 #Burası üst kısımda kubeconfig dosyasını
 #oluşturduktan sonra modüllerin kurulumu
 #çağırır
-module "traefik" {
-  source     = "./modules/traefik"
-  depends_on = [null_resource.get_kubeconfig]
-}
-
-module "cert_manager" {
-  source = "./modules/cert-manager"
-
-  providers = {
-    kubernetes = kubernetes
-    helm       = helm
-  }
-
-  depends_on = [module.traefik]
-}
-
 module "loki" {
   source = "./modules/loki"
 
@@ -82,7 +66,9 @@ module "loki" {
     kubernetes = kubernetes
   }
 
-  depends_on = [module.traefik]
+  depends_on = [
+    null_resource.get_kubeconfig
+  ]
 }
 
 module "promtail" {
@@ -107,8 +93,7 @@ module "prometheus" {
   }
 
   depends_on = [
-    null_resource.get_kubeconfig,  # cluster hazır olsun
-    module.traefik                 # ingress var
+    null_resource.get_kubeconfig
   ]
 }
 
@@ -121,10 +106,7 @@ module "tempo" {
   }
 
   depends_on = [
-    null_resource.get_kubeconfig,
-    module.prometheus,  # Grafana hazır olsun
-    module.traefik,      # ingress class hazır olsun
-    module.cert_manager  # ileride TLS istersen hazır bulunsun
+    null_resource.get_kubeconfig
   ]
 }
 
@@ -132,62 +114,16 @@ module "otel_collector" {
   source = "./modules/otel-collector"
 
   providers = {
-    //kubectl    = kubectl
     kubernetes = kubernetes
   }
 
   depends_on = [
-    module.tempo   # Collector Tempo’ya gönderecek
+    module.tempo
   ]
 }
 
-module "vault" {
-  source = "./modules/vault"
-
-  providers = {
-    helm       = helm
-    kubernetes = kubernetes
-  }
-
-  depends_on = [
-    null_resource.get_kubeconfig,
-    module.traefik,
-    module.cert_manager
-  ]
-}
 provider "vault" {
   address = "https://vault.cantalay.com"
   token   = ""
-}
-module "postgresql" {
-  source = "./modules/postgresql"
-
-  providers = {
-    helm       = helm
-    kubernetes = kubernetes
-  }
-
-  depends_on = [
-    null_resource.get_kubeconfig,
-    module.traefik,
-    module.cert_manager,
-    module.vault
-  ]
-}
-module "keycloak" {
-  source = "./modules/keycloak"
-
-  providers = {
-    helm       = helm
-    kubernetes = kubernetes
-  }
-
-  depends_on = [
-    null_resource.get_kubeconfig,
-    module.traefik,
-    module.cert_manager,
-    module.postgresql,
-    module.vault
-  ]
 }
 

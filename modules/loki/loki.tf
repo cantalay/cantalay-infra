@@ -1,4 +1,15 @@
-resource "kubernetes_namespace" "loki" {
+terraform {
+  required_providers {
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+    }
+    helm = {
+      source  = "hashicorp/helm"
+    }
+  }
+}
+
+resource "kubernetes_namespace_v1" "loki" {
   metadata {
     name = "loki"
   }
@@ -6,7 +17,7 @@ resource "kubernetes_namespace" "loki" {
 
 resource "helm_release" "loki" {
   name       = "loki"
-  namespace  = kubernetes_namespace.loki.metadata[0].name
+  namespace  = kubernetes_namespace_v1.loki.metadata[0].name
   repository = "https://grafana.github.io/helm-charts"
   chart      = "loki"
   version    = "6.46.0"
@@ -18,6 +29,6 @@ resource "helm_release" "loki" {
   ]
 
   depends_on = [
-    kubernetes_namespace.loki
+    kubernetes_namespace_v1.loki
   ]
 }

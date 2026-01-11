@@ -129,3 +129,6 @@ monitoring:
 # Test suite'i devre dışı bırak
 test:
   enabled: false
+
+lokiCanary:
+  enabled: false

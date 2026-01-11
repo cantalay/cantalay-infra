@@ -8,7 +8,7 @@ terraform {
     }
   }
 }
-resource "kubernetes_namespace" "otel_collector" {
+resource "kubernetes_namespace_v1" "otel_collector" {
   metadata {
     name = "otel-collector"
   }
@@ -16,7 +16,7 @@ resource "kubernetes_namespace" "otel_collector" {
 
 resource "helm_release" "otel_collector" {
   name       = "otel-collector"
-  namespace  = kubernetes_namespace.otel_collector.metadata[0].name
+  namespace  = kubernetes_namespace_v1.otel_collector.metadata[0].name
   chart      = "opentelemetry-collector"
   version    = "0.140.0"  # Güncel sürüm
   repository = "https://open-telemetry.github.io/opentelemetry-helm-charts"

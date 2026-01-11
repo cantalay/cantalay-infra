@@ -36,9 +36,9 @@ grafana:
 
       scopes: openid profile email roles
 
-      auth_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/auth
-      token_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/token
-      api_url: https://keycloak.cantalay.com/auth/realms/cantalay-infra/protocol/openid-connect/userinfo
+      auth_url: https://keycloak.cantalay.com/auth/realms/monitoring/protocol/openid-connect/auth
+      token_url: https://keycloak.cantalay.com/auth/realms/monitoring/protocol/openid-connect/token
+      api_url: https://keycloak.cantalay.com/auth/realms/monitoring/protocol/openid-connect/userinfo
 
       # Role mapping
       role_attribute_path: >

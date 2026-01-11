@@ -1,17 +1,15 @@
 terraform {
   required_providers {
-    helm = {
-      source  = "hashicorp/helm"
-      version = ">= 2.12.1"
-    }
     kubernetes = {
       source  = "hashicorp/kubernetes"
-      version = ">= 2.22.0"
+    }
+    helm = {
+      source  = "hashicorp/helm"
     }
   }
 }
 
-resource "kubernetes_namespace" "promtail" {
+resource "kubernetes_namespace_v1" "promtail" {
   metadata {
     name = "promtail"
   }
@@ -19,7 +17,7 @@ resource "kubernetes_namespace" "promtail" {
 
 resource "helm_release" "promtail" {
   name             = "promtail"
-  namespace        = kubernetes_namespace.promtail.metadata[0].name
+  namespace        = kubernetes_namespace_v1.promtail.metadata[0].name
   create_namespace = false
 
   repository = "https://grafana.github.io/helm-charts"
