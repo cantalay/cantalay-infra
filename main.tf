@@ -50,7 +50,7 @@ output "kubeconfig_file" {
 terraform {
   backend "kubernetes" {
     namespace        = "terraform-states" # State'in saklanacağı yer
-    secret_suffix    = "app-state"      # Secret adının sonuna eklenir
+    secret_suffix    = "infra-state"      # Secret adının sonuna eklenir
     config_path   = "/home/cant/.kube/config"
   }
 }
